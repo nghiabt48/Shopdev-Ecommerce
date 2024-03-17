@@ -73,6 +73,7 @@ const authenticationV2 = asyncHandler(async (req, res, next) => {
     const decodeUser = jwt.verify(accessToken, keyStore.publicKey)
     if (userId !== decodeUser.userId) throw new AuthFailureRequestError('Invalid user')
     req.keyStore = keyStore
+    req.user = decodeUser
     return next()
   } catch (e) {
     throw e

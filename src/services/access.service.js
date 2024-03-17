@@ -58,7 +58,7 @@ class AccessService{
         data: null
        }
     }
-  static login = async (email, password, refreshToken = null) => {
+  static login = async ({email, password, refreshToken = null}) => {
     const shop = await findByEmail({email})
     if(!shop) throw new BadRequestError('Shop not registered')
     const match = await bcrypt.compare(password, shop.password)
@@ -76,7 +76,7 @@ class AccessService{
     })
 
     return {
-      shop: getInfoData({ fields: ['_id', 'name', 'email'], object: newShop}),
+      shop: getInfoData({ fields: ['_id', 'name', 'email'], object: shop}),
       tokens
     }
   }

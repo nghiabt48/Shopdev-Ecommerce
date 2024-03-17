@@ -8,7 +8,7 @@ const StatusCodeMeaning = {
 }
 
 class SuccessResponse {
-  constructor(message, statusCode = StatusCode.OK, statusCodeMeaning = StatusCodeMeaning.OK, metadata = {}, options = {}) {
+  constructor({message, statusCode = StatusCode.OK, statusCodeMeaning = StatusCodeMeaning.OK, metadata = {}, options = {}}) {
     this.message = !message ? statusCodeMeaning : message
     this.status = statusCode
     this.metadata = metadata
@@ -16,7 +16,7 @@ class SuccessResponse {
     this.statusCodeMeaning = statusCodeMeaning
   }
   send(res, header = {}) {
-    return res.status( this.status).json(this)
+    return res.status(this.status).json(this)
   }
 }
 class OK extends SuccessResponse {

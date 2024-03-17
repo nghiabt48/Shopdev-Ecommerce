@@ -16,17 +16,17 @@ const apiKey = async(req, res, next) => {
     req.objKey = objKey
     return next()
   } catch (error) {
-    throw new ForbiddenError(error.message)
+    return next(new ForbiddenError(error.message))
   }
 }
 const permission = (permission) => {
   return (req, res, next) => {
     if(!req.objKey.permissions){
-      throw new ForbiddenError('Permission denied')
+      return next(new ForbiddenError('Permission denied')) 
     }
     const validPermission = req.objKey.permissions.includes(permission)
     if(!validPermission) {
-      throw new ForbiddenError('Permission denied')
+      return next(new ForbiddenError('Permission denied')) 
     }
     return next()
   }

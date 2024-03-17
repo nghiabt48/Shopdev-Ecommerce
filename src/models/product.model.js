@@ -1,4 +1,5 @@
 const mongoose = require('mongoose'); // Erase if already required
+const slugify = require('slugify');
 
 const DOCUMENT_NAME = 'Product'
 const COLLECTION_NAME = 'Products'
@@ -8,6 +9,7 @@ var productSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    product_slug: String,
     product_thumb:{
         type:String,
         required:true,
@@ -25,26 +27,55 @@ var productSchema = new mongoose.Schema({
     },
     product_shop: {
         type: mongoose.Types.ObjectId,
-        ref: 'shop'
+        ref: 'Shop'
     },
     product_type: {
-        type: Array,
+        type: String,
         required: true,
         enum: ['Electronic', 'Clothing', 'Furniture']
     },
     product_attributes: {
         type: mongoose.Schema.Types.Mixed,
         required: true
+    },
+    product_ratingsAverage: {
+        type: Number,
+        default: 4,
+        min: [1, 'Rating must be above 1.0'],
+        max: [5, 'Rating must be below 5.0'],
+        set: (val) => Math.round(val * 10) / 10
+    },
+    product_variations: {
+        type: Array,
+        default: []
+    },
+    isDraft: {
+        type: Boolean,
+        default: true,
+        index: true,
+        select: false
+    },
+    isPublished: {
+        type: Boolean,
+        default: false,
+        index: true,
+        select: false
     }
 }, {
     timestamps: true,
     collection: COLLECTION_NAME
 });
+
+productSchema.index({ product_name: 'text', product_description: 'text'})
 // Define some product types
 const clothingSchema = new mongoose.Schema({
     brand: {type: String, required: true},
     size: String,
-    material: String
+    material: String,
+    product_shop: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shop'
+    }
 },{
     collection: 'clothing',
     timestamps: true
@@ -52,10 +83,19 @@ const clothingSchema = new mongoose.Schema({
 const electronicSchema = new mongoose.Schema({
     manufacturer: {type: String, required: true},
     model: String,
-    color: String
+    color: String,
+    product_shop: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shop'
+    }
 },{
     collection: 'electronic',
     timestamps: true
+})
+// Document middlewares run before .save() and .create()
+productSchema.pre('save', function(next) {
+    this.product_slug = slugify(this.product_name, {lower: true})
+    next()
 })
 //Export the model
 module.exports = {
