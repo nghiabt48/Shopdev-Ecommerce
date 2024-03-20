@@ -3,6 +3,7 @@ const { product, clothing, electronic } = require('../models/product.model.js')
 const { BadRequestError } = require('../core/error.response.js');
 const { findAllDraftsForShop, publishProductByShop, findAllPublishForShop, unPublishProductByShop, searchProducts, findAllProducts, findProduct, updateProductById } = require('../models/repositories/product.repo.js');
 const { removeNullObject, updateNestedObjectParser } = require('../utils/index.js');
+const { insertInventory } = require('../models/repositories/inventory.repo.js');
 
 // Define factory class to create product
 class ProductFactory {
@@ -59,7 +60,15 @@ class Product {
     this.product_attributes = product_attributes;
   }
   async createProduct(product_id) {
-      return await product.create({...this, _id: product_id});
+      const newProduct = await product.create({...this, _id: product_id});
+      if(newProduct){
+        await insertInventory({
+          productId: newProduct._id,
+          shopId: this.product_shop,
+          stock: this.product_quantity
+        })
+      }
+      return newProduct;
   }
   async updateProduct(product_id, payload) {
     return await updateProductById({product_id, payload, model: product});
