@@ -62,7 +62,6 @@ var productSchema = new mongoose.Schema({
         select: false
     }
 }, {
-    timestamps: true,
     collection: COLLECTION_NAME
 });
 

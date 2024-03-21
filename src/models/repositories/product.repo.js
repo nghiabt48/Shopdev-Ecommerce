@@ -25,27 +25,32 @@ const searchProducts = async({ keywords}) => {
 const findAllPublishForShop = async({ query, limit, skip}) => {
   return await queryProduct({ query, limit, skip})
 }
-const unPublishProductByShop = async({ query, limit, skip}) => {
-  const foundProduct = await product.findOne({
+const unPublishProductByShop = async({ product_shop, product_id}) => {
+  // check if this shop is the product's owner
+  const productOwner = await product.findById(product_id).lean()
+  if(productOwner.product_shop !== product_shop) throw new AuthFailureRequestError("You are not the owner of this product")
+  const updatedProduct = await product.findOneAndUpdate({
     product_shop: new mongoose.Types.ObjectId(product_shop),
     _id: new mongoose.Types.ObjectId(product_id)
-  })
-  if(!foundProduct) return null
-  foundProduct.isDraft = true
-  foundProduct.isPublished = false
-  const { modifiedCount} = await foundProduct.update(foundProduct);
-  return modifiedCount
+  }, {
+    isDraft: true,
+    isPublished: false
+  }, { returnOriginal: false});
+  return updatedProduct ? 1 : 0;
 }
 const publishProductByShop = async({ product_shop, product_id}) => {
-  const foundProduct = await product.findOne({
+  // check if this shop is the product's owner
+  const productOwner = await product.findById(product_id).lean()
+  if(productOwner.product_shop !== product_shop) throw new AuthFailureRequestError("You are not the owner of this product")
+
+  const updatedProduct = await product.findOneAndUpdate({
     product_shop: new mongoose.Types.ObjectId(product_shop),
     _id: new mongoose.Types.ObjectId(product_id)
-  })
-  if(!foundProduct) return null
-  foundProduct.isDraft = false
-  foundProduct.isPublished = true
-  const { modifiedCount} = await foundProduct.update(foundProduct);
-  return modifiedCount
+  }, {
+    isDraft: false,
+    isPublished: true
+  }, { returnOriginal: false});
+  return updatedProduct ? 1 : 0;
 }
 const findAllProducts = async ({limit, sort, page, filter, select}) => {
   const skip = (page - 1) * limit
@@ -61,7 +66,7 @@ const findAllProducts = async ({limit, sort, page, filter, select}) => {
 const updateProductById = async({ product_id, payload, model, isNew = true }) => {
   // Check if this shop is the same as the owner of the product
   const productOwner = await model.findById(product_id).lean()
-  if(productOwner !== payload.product_shop) throw new AuthFailureRequestError("You are not the owner of this product")
+  if(productOwner.product_shop !== payload.product_shop) throw new AuthFailureRequestError("You are not the owner of this product")
   return await model.findByIdAndUpdate(product_id, payload, { new: isNew })
 }
 const findProduct = async ({ product_id, unselect }) => {
@@ -75,6 +80,9 @@ const queryProduct = async ({ query, limit, skip}) => {
   .limit(limit)
   .lean()
 }
+const getProductById = async(productId) => {
+  return await product.findById(productId).lean()
+}
 module.exports = { 
   findAllDraftsForShop, 
   publishProductByShop, 
@@ -83,5 +91,6 @@ module.exports = {
   searchProducts,
   findAllProducts,
   findProduct,
-  updateProductById
+  updateProductById,
+  getProductById
 }
