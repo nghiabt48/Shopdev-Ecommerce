@@ -4,6 +4,8 @@ const { findCartById } = require("../models/repositories/cart.repo")
 const { BadRequestError, NotFoundError } = require("../core/error.response");
 const { serverCheckProduct } = require("../models/repositories/product.repo");
 const DiscountService = require("./discount.service");
+const { acquireLock, releaseLock } = require("./redis.service");
+const { order } = require("../models/order.model");
 
 /* can be processed without log in
   {
@@ -57,16 +59,16 @@ class CheckoutService {
         priceApplyDiscount: checkoutPrice,
         item_products: checkProductServer
       }
-      if(shop_discounts.length > 0) {
+      if (shop_discounts.length > 0) {
         // only 1 discount
-        const { discount = 0} = await DiscountService.getDiscountAmount({
+        const { discount = 0 } = await DiscountService.getDiscountAmount({
           code: shop_discounts[0].code,
           userId,
           shopId,
           products: checkProductServer
         })
         checkout_order.totalDiscount += discount
-        if(discount > 0) {
+        if (discount > 0) {
           itemCheckout.priceApplyDiscount = checkoutPrice - discount
         }
       }
@@ -78,7 +80,53 @@ class CheckoutService {
       shop_order_ids_new,
       checkout_order
     }
+  }
+  static async userMakeOrder({
+    shop_order_ids,
+    cartId,
+    userId,
+    user_address = {},
+    user_payment = {}
+  }) {
+    const { shop_order_ids_new, checkout_order } = await CheckoutService.checkoutReview({
+      cartId, userId, shop_order_ids
+    })
+    // check so luong ton kho
+    const products = shop_order_ids_new.flatMap(order => order.item_products)
+    const acquiredProducts = []
+    for (let i = 0; i < products.length; i++) {
+      const { productId, quantity } = products[i]
+      const keyLock = await acquireLock(productId, quantity, cartId)
+      acquiredProducts.push(keyLock ? true : false)
+      if (keyLock) {
+        await releaseLock(keyLock)
+      }
+    }
+    // neu co san pham het hang trong kho
+    if (acquiredProducts.includes(false)) throw new BadRequestError("Some products have been updated, please go back to cart")
+    const newOrder = await order.create({
+      order_userId: userId,
+      order_checkout: checkout_order,
+      order_shipping: user_address,
+      order_payment: user_payment,
+      order_products: shop_order_ids_new
+    })
+    if (newOrder) {
 
+    }
+    return newOrder
+  }
+  static async userGetOrder() {
+
+  }
+  static async getOrderByUserId() {
+    
+  }
+  static async userCancelOrder() {
+    
+  }
+  static async shopUpdateOrderStatus() {
+    
   }
 }
 module.exports = CheckoutService
