@@ -45,12 +45,18 @@ class CartService {
     }
     // cart_products is empty
     if(!userCart.cart_products.length) {
-      userCart.cart_products = [product]
+      userCart.cart_products.push(product)
       return await userCart.save()
     }
-    // cart exists and cart_products already have product that user just added
-    // increase quantity of this product in cart_products
-    return await CartService.updateProductQuantityInCart({ userId, product })
+    const existingProductIndex = userCart.cart_products.findIndex(item => item.productId === product.productId);
+    if (existingProductIndex !== -1) {
+        // Product already exists in the cart, update its quantity
+       return await CartService.updateProductQuantityInCart({ userId, product })
+    } else {
+        // Product doesn't exist in the cart, add it to the cart
+        userCart.cart_products.push(product)
+        return await userCart.save();
+    }
   }
   static async updateCart({ userId, shop_order_ids }) {
     const { productId, quantity, old_quantity } = shop_order_ids[0]?.item_products[0]
