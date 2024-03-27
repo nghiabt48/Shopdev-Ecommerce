@@ -11,7 +11,7 @@ class Database {
       mongoose.set('debug', true)
       mongoose.set('debug', {color: true})
     }
-    mongoose.connect(connectString).then( _ => console.log("Database connect successful"))
+    mongoose.connect(connectString, {useNewUrlParser: true, useUnifiedTopology: true}).then( _ => console.log("Database connect successful"))
   .catch(err => console.log("Error connecting to DB"))
   }
 

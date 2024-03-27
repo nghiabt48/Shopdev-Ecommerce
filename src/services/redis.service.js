@@ -4,10 +4,16 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { reserveInventory } = require('../models/repositories/inventory.repo');
 const redisClient = redis.createClient()
+
+redisClient.ping((err, res) => {
+  if(err) return console.error(err);
+  console.log('connected to redis')
+})
+
 const pexpire = promisify(redisClient.pexpire).bind(redisClient)
 const setnxAsync = promisify(redisClient.setnx).bind(redisClient)
 
-const acquireLock = async (productId, quantity, cart) => {
+const acquireLock = async (productId, quantity, cartId) => {
   const key = `lock_v2024${productId}`
   const retryTimes = 10
   const timeout = 3000

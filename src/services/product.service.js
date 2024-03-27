@@ -4,6 +4,7 @@ const { BadRequestError } = require('../core/error.response.js');
 const { findAllDraftsForShop, publishProductByShop, findAllPublishForShop, unPublishProductByShop, searchProducts, findAllProducts, findProduct, updateProductById } = require('../models/repositories/product.repo.js');
 const { removeNullObject, updateNestedObjectParser } = require('../utils/index.js');
 const { insertInventory } = require('../models/repositories/inventory.repo.js');
+const { pushNotificationToSystem } = require('./notification.service.js');
 
 // Define factory class to create product
 class ProductFactory {
@@ -66,6 +67,15 @@ class Product {
           productId: newProduct._id,
           shopId: this.product_shop,
           stock: this.product_quantity
+        })
+        pushNotificationToSystem({
+          type: 'SHOP-01',
+          receiverId: 69,
+          senderId: this.product_shop,
+          options: {
+            product_name: this.product_name,
+            shop: this.product_shop
+          }
         })
       }
       return newProduct;

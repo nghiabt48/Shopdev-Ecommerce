@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { asyncHandler } = require('../helpers/asyncHandler');
-const { AuthFailureRequestError, NotFoundError } = require('../core/error.response');
+const { AuthFailureRequestError, NotFoundError, BadRequestError } = require('../core/error.response');
 const { findKeyByUserId } = require('../services/keyToken.service');
 const HEADER = {
   API_KEY: 'x-api-key',
@@ -18,11 +18,10 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
     })
     jwt.verify(accessToken, publicKey, (err, decode) => {
       if (err) console.error(`error verify::`, err)
-      else console.log(`decode verify::`, decode)
     })
     return { accessToken, refreshToken }
   } catch (error) {
-
+    throw new BadRequestError("Error when creating token: " + error.message)
   }
 }
 const authentication = asyncHandler(async (req, res, next) => {
