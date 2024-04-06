@@ -7,6 +7,7 @@ const router = express.Router()
 // check apiKey
 router.use(apiKey)
 // check permission
+router.use('/v1/api/upload', require('./upload'))
 router.use(permission('0000'))
 
 router.use('/v1/api/product', require('./product'))
