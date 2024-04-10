@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.550.0",
+    "@aws-sdk/s3-request-presigner": "^3.550.0",
     "amqplib": "^0.10.3",
     "bcrypt": "^5.1.0",
     "cloudinary": "^2.1.0",
@@ -22,6 +24,7 @@
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
     "mongoose": "^7.4.1",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.9.3",
     "redis": "^3.1.2",
     "slugify": "^1.6.6"
